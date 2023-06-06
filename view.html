@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>View Movie</title>
+    <style>
+      body {
+        display: flex;
+        gap: 50px;
+      }
+      #picture {
+        max-width: 800px;
+        height: 500px;
+      }
+      #movGen {
+        font-style: italic;
+      }
+
+      #release {
+        font-style: italic;
+      }
+      .info {
+        width: 500px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div>
+      <img id="picture" src="" />
+    </div>
+
+    <div class="info">
+      <h1 id="movieId"></h1>
+      <p id="release"></p>
+      <p id="desc">description ng movie</p>
+      <p id="movGen"></p>
+    </div>
+    <script>
+      const movieId = new URLSearchParams(window.location.search).get("id");
+      const url = new URL(window.location.href);
+      const movies = JSON.parse(localStorage.getItem("movies"));
+      const index = movies.map((movie) => movie._id).indexOf(movieId);
+      const movie = movies[index];
+      const genres = JSON.parse(localStorage.getItem("genres"));
+      const indexGenre = genres.map((genre) => genre._id).indexOf(movie.genre);
+      const genre = genres[indexGenre];
+
+      document.getElementById("movieId").innerText = movie.title;
+      document.getElementById("desc").innerText = movie.description;
+      document.getElementById("movGen").innerText = genre.title;
+      document.getElementById("picture").src = movie.poster_url;
+      document.getElementById("release").innerText = movie.release_date;
+    </script>
+  </body>
+</html>
