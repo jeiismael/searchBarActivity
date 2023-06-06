@@ -29,13 +29,23 @@
       <div class="row">
         <div class="col">
           <!-- Table to display movies -->
-          <input
-            class="form-control"
-            list="datalistOptions"
-            id="searchTerm"
-            placeholder="Search movies by name or genre."
-          />
-          <datalist id="datalistOptions"></datalist>
+          <nav class="navbar bg-body-tertiary">
+            <div class="container-fluid">
+              <form class="d-flex" role="search">
+                <input
+                  class="form-control me-2"
+                  type="search"
+                  placeholder="Search"
+                  aria-label="Search"
+                  id="searchTerm"
+                />
+                <button class="btn btn-light" type="submit">Search</button>
+              </form>
+            </div>
+          </nav>
+          <!-- <div class="mb-3">
+          <input type="text" class="form-control border-0 border-bottom" id="searchTerm" placeholder="Search movies...">
+        </div> -->
           <table class="table table-striped">
             <thead>
               <tr>
@@ -121,6 +131,7 @@
                   required
                 />
               </div>
+
               <div class="mb-3">
                 <label for="poster_url" class="form-label">Poster Url</label>
                 <input
@@ -128,6 +139,17 @@
                   class="form-control"
                   name="poster_url"
                   id="poster_url"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="movie_url" class="form-label">Movie Trailer</label>
+                <input
+                  type="url"
+                  class="form-control"
+                  name="movie_url"
+                  id="movie_url"
                   required
                 />
               </div>
@@ -204,15 +226,29 @@
                   required
                 />
               </div>
+
               <div class="mb-3">
-                <label for="updatePosterUrl" class="form-label"
+                <label for="updateMoviePosterURL" class="form-label"
                   >Poster Url</label
                 >
                 <input
                   type="url"
                   class="form-control"
-                  name="updatePosterUrl"
-                  id="updatePosterUrl"
+                  name="updateMoviePosterURL"
+                  id="poster_url"
+                  required
+                />
+              </div>
+
+              <div class="mb-3">
+                <label for="updateMovieMovieURL" class="form-label"
+                  >Movie Trailer</label
+                >
+                <input
+                  type="url"
+                  class="form-control"
+                  name="updateMovieMovieURL"
+                  id="updateMovieMovieURL"
                   required
                 />
               </div>
@@ -272,6 +308,8 @@
       </div>
     </div>
 
+    <!-- LOOPING MOVIES -->
+    <!-- <script src="loopmovie.js"></script> -->
     <!-- Include Bootstrap JavaScript -->
     <script
       src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"
@@ -279,13 +317,12 @@
       crossorigin="anonymous"
     ></script>
 
-    <!-- Fuse script -->
     <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.js"></script>
 
     <!-- JavaScript code -->
     <script>
       // API URL for CRUD operations
-      const url = "https://crudcrud.com/api/89da5ad1bad44704954da49ab2237c7e";
+      const url = "https://647eff7bc246f166da8fdb07.mockapi.io";
 
       // Function to get genres from API or localStorage
       const getGenres = async () => {
@@ -362,33 +399,34 @@
             )
             .catch((error) => console.log(error));
         }
+
+        const movies = JSON.parse(localStorage.getItem("movies"));
+        generateTableMovies(movies);
+        const searchInput = document.getElementById("searchTerm");
+
+        searchInput.addEventListener("keyup", (event) => {
+          const searchTerm = event.target.value;
+
+          if (searchTerm.length >= 3) {
+            const options = {
+              includeScore: true,
+              keys: ["title", "description"],
+            };
+
+            const fuse = new Fuse(movies, options);
+
+            const result = fuse.search(searchTerm);
+            const searchResult = result.map((entry) => entry.item);
+            generateTableMovies(searchResult);
+          } else {
+            generateTableMovies(movies);
+          }
+        });
       };
-
-      const movies = JSON.parse(localStorage.getItem("movies"));
-      generateTableMovie(movies);
-      const searchInput = document.getElementById("searchTerm");
-
-      searchInput.addEventListener("keyup", (event) => {
-        const searchTerm = event.target.value;
-
-        if (searchTerm.length >= 3) {
-          const options = {
-            includeScore: true,
-            keys: ["title", "description", "genre"],
-          };
-
-          const fuse = new Fuse(movies, options);
-          const result = fuse.search(searchTerm);
-          const searchResult = result.map((entry) => entry.item);
-          generateTableMovie(searchResult);
-        } else {
-          generateTableMovie(movies);
-        }
-      });
       // Call the function to get movies
       getMovies();
 
-      function generateTableMovie(movies) {
+      function generateTableMovies(movies) {
         const movieTableBody = document.getElementById("movieTableBody");
         movieTableBody.innerHTML = "";
         let rows = "";
@@ -400,7 +438,7 @@
                             <td>
                                 <a href="view.html?id=${movies[i]._id}">${
             movies[i].title
-          }</a>
+          }</a>    
                             </td>
                             <td>${getGenreTitle(movies[i].genre)}</td>
                             <td>${movies[i].release_date}</td>
@@ -441,6 +479,7 @@
           const description = document.getElementById("description").value;
           const release_date = document.getElementById("release_date").value;
           const poster_url = document.getElementById("poster_url").value;
+          const movie_url = document.getElementById("movie_url").value;
           // Send a POST request to create a new movie
           fetch(`${url}/movies`, {
             method: "POST",
@@ -453,6 +492,7 @@
               description,
               release_date,
               poster_url,
+              movie_url,
             }),
           })
             .then((response) => response.json())
@@ -470,6 +510,7 @@
               document.getElementById("description").value = "";
               document.getElementById("release_date").value = "";
               document.getElementById("poster_url").value = "";
+              document.getElementById("movie_url").value = "";
             })
             .catch((error) => {
               console.log(error);
@@ -522,8 +563,10 @@
             selectedMovie.description;
           document.getElementById("updateMovieReleaseDate").value =
             selectedMovie.release_date;
-          document.getElementById("updatePosterUrl").value =
-            selectedMovie.updatePosterUrl;
+          document.getElementById("poster_url").value =
+            selectedMovie.poster_url;
+          document.getElementById("updateMovieMovieURL").value =
+            selectedMovie.movie_url;
 
           const updateMovieModal =
             bootstrap.Modal.getOrCreateInstance("#updateMovieModal");
@@ -547,8 +590,10 @@
           const release_date = document.getElementById(
             "updateMovieReleaseDate"
           ).value;
-          const updatePosterUrl =
-            document.getElementById("updatePosterUrl").value;
+          const poster_url = document.getElementById("poster_url").value;
+          const movie_url = document.getElementById(
+            "updateMoviemovieURL"
+          ).value;
 
           // Send a POST request to create a new movie
           fetch(`${url}/movies/${id}`, {
@@ -561,7 +606,8 @@
               title,
               description,
               release_date,
-              updatePosterUrl,
+              poster_url,
+              movie_url,
             }),
           })
             .then((result) => {
@@ -579,7 +625,8 @@
               document.getElementById("updateMovieTitle").value = "";
               document.getElementById("updateMovieDescription").value = "";
               document.getElementById("updateMovieReleaseDate").value = "";
-              document.getElementById("updatePosterUrl").value = "";
+              document.getElementById("poster_url").value = "";
+              document.getElementById("updateMovieMovieURL").value = "";
             })
             .catch((error) => {
               console.log(error);
@@ -633,10 +680,6 @@
               console.log(error);
             });
         });
-
-      const search = (event) => {
-        console.log(event.target.value);
-      };
     </script>
   </body>
 </html>
